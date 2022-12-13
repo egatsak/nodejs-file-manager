@@ -1,14 +1,14 @@
-import * as readline from "readline/promises";
-import os from "os";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import { stdin as input, stdout as output } from "process";
+import * as readline from "node:readline/promises";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { stdin as input, stdout as output } from "node:process";
 
-import FsCommandHandler from "./handlers/fsCommandHandler.js";
+import FsHandler from "./handlers/fsHandler.js";
 import { parseArgs } from "./helpers/args.js";
-import { osMethods } from "./handlers/os.js";
-import { calculateHash } from "./handlers/calcHash.js";
-import { compress, decompress } from "./handlers/zip.js";
+import { osMethods } from "./handlers/osHandler.js";
+import { calculateHash } from "./handlers/hashHandler.js";
+import { compress, decompress } from "./handlers/zipHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -52,7 +52,7 @@ async function parseLine(line) {
   try {
     switch (true) {
       case command === "help":
-        await FsCommandHandler.cat(__dirname, join("..", "HELP.txt"));
+        await FsHandler.cat(__dirname, join("..", "HELP.txt"));
         return;
       case command === "os":
         if (args.length !== 1 || !args[0].startsWith("--")) {
@@ -69,47 +69,41 @@ async function parseLine(line) {
         await calculateHash(currentPath, args[0]);
         return;
       case command === "ls":
-        await FsCommandHandler.ls(currentPath);
+        await FsHandler.ls(currentPath);
         return;
       case command === "up":
-        const upperPath = await FsCommandHandler.cd(
-          currentPath,
-          ".."
-        );
+        const upperPath = await FsHandler.cd(currentPath, "..");
         if (upperPath) {
           currentPath = upperPath;
         }
         return;
       case command === "cd":
-        const newPath = await FsCommandHandler.cd(
-          currentPath,
-          args[0]
-        );
+        const newPath = await FsHandler.cd(currentPath, args[0]);
         if (newPath) {
           currentPath = newPath;
         }
         return;
       case command === "cat":
-        const data = await FsCommandHandler.cat(currentPath, args[0]);
+        const data = await FsHandler.cat(currentPath, args[0]);
         return data;
       case command === "add":
-        await FsCommandHandler.add(currentPath, args[0]);
+        await FsHandler.add(currentPath, args[0]);
         return;
       case command === "rn":
-        await FsCommandHandler.rn(currentPath, args[0], args[1]);
+        await FsHandler.rn(currentPath, args[0], args[1]);
         return;
       case command === "cp":
-        const cpData = await FsCommandHandler.cp(
+        const cpData = await FsHandler.cp(
           currentPath,
           args[0],
           args[1]
         );
         return cpData;
       case command === "mv":
-        await FsCommandHandler.mv(currentPath, args[0], args[1]);
+        await FsHandler.mv(currentPath, args[0], args[1]);
         return;
       case command === "rm":
-        await FsCommandHandler.rm(currentPath, args[0]);
+        await FsHandler.rm(currentPath, args[0]);
         return;
       case command === "compress":
         await compress(currentPath, args[0], args[1]);

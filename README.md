@@ -14,12 +14,8 @@
 npm run start -- --username=%YOUR_USERNAME%
 ```
 
-- run
+- run `help` to get the list of commands.
 
-```bash
-help
-```
+The program accepts relative and absolute paths on Windows and Unix systems.
 
-to get the list of commands.
-
-The program accepts (hopefully) relative and absolute paths.
+Try to play with ~, \\, /, etc., or press Ctrl+C or type .exit to quit.

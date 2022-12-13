@@ -1,7 +1,8 @@
-import * as crypto from "crypto";
-import * as fs from "fs/promises";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs/promises";
 
 import { pathResolver } from "../helpers/pathResolver.js";
+import { errorHandler } from "../helpers/errorHandler.js";
 
 export const calculateHash = async (currentPath, pathArg) => {
   try {
@@ -12,6 +13,6 @@ export const calculateHash = async (currentPath, pathArg) => {
     const hex = hashSum.digest("hex");
     console.log(hex);
   } catch (e) {
-    console.log("Operation failed ; ", e.message);
+    errorHandler(e, "ENOENT");
   }
 };
