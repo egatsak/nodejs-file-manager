@@ -1,20 +1,28 @@
-import { join, sep } from "path";
+import { isAbsolute, join, sep, parse } from "path";
+import os from "os";
 
 export const pathResolver = (currentPath, pathArg) => {
   if (!pathArg) {
     throw new Error("Invalid input");
   }
-
   let path = "";
 
-  if (pathArg.search(/^[a-zA-Z][:]/gm) === 0) {
-    path = pathArg;
-    if (pathArg.endsWith(":")) {
-      path = pathArg + sep;
-    }
-  } else {
-    path = join(currentPath, pathArg);
+  if (pathArg.startsWith("~")) {
+    return join(os.homedir(), pathArg.slice(1));
   }
 
-  return path;
+  if (pathArg.match(/^[a-zA-Z]:$/gm)) {
+    path = pathArg + sep;
+    return path;
+  }
+
+  if (isAbsolute(pathArg)) {
+    if (pathArg.startsWith(sep)) {
+      const { root } = parse(currentPath);
+      return join(root, pathArg);
+    }
+    return pathArg;
+  }
+
+  return join(currentPath, pathArg);
 };
