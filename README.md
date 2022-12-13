@@ -11,7 +11,7 @@
 - run
 
 ```bash
-npm run start -- --username=%USERNAME%
+npm run start -- --username=%YOUR_USERNAME%
 ```
 
 - run
@@ -22,4 +22,4 @@ help
 
 to get the list of commands.
 
-The program accepts (hopefully) relative and absolute paths
+The program accepts (hopefully) relative and absolute paths.

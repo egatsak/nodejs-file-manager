@@ -8,17 +8,17 @@ List of operations and their syntax:
 
 
 - Basic operations with files
-    cat path_to_file    - Read file and print it's content in console;
+    cat path_to_file    - Read file and print its content in console;
 
     add new_file_name     - Create empty file in current working directory;
 
-    rn path_to_file new_filename    - Rename file; 
+    rn path_to_file new_filename    - Rename file; (accepts absolute & relative paths for new filename)
 
     cp path_to_file path_to_new_directory   - Copy file;
 
     mv path_to_file path_to_new_directory   - Move file;
 
-    rm path_to_file - Delete file: 
+    rm path_to_file - Delete file;
 
 
 - Operating system info (prints following information in console)
@@ -47,4 +47,4 @@ List of operations and their syntax:
         compress d:\a.txt d:\a.gz
         decompress d:\a.gz d:\a.txt
 
-Enjoy!
+Enjoy! (or press Ctrl+C or type .exit to quit)
