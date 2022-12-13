@@ -1,12 +1,38 @@
 import * as readline from "readline/promises";
 import os from "os";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { stdin as input, stdout as output } from "process";
+
 import CommandHandler from "./commandHandler.js";
-import { parseArgs } from "./cli/args.js";
+import { parseArgs } from "./helpers/args.js";
+import { calculateHash } from "./helpers/calcHash.js";
+import { compress, decompress } from "./helpers/zip.js";
 
 const args = parseArgs();
 const username = args["username"];
 let currentPath = os.homedir();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const osMethods = {
+  EOL: () => {
+    console.log(os.EOL);
+  },
+  cpus: () => {
+    console.log(os.cpus());
+  },
+  homedir: () => {
+    console.log(os.userInfo().homedir);
+  },
+  username: () => {
+    console.log(os.userInfo().username);
+  },
+  architecture: () => {
+    console.log(os.arch());
+  }
+};
 
 async function parseLine(line) {
   const parsedLine = line.split(" ");
@@ -14,6 +40,23 @@ async function parseLine(line) {
 
   try {
     switch (true) {
+      case command === "help":
+        await CommandHandler.cat(__dirname, join("..", "HELP.txt"));
+        return;
+      case command === "os":
+        if (args.length !== 1 || !args[0].startsWith("--")) {
+          throw new Error("Invalid input");
+        }
+        const arg = args[0].slice(2);
+        const func = osMethods[arg];
+        if (!func) {
+          throw new Error("Invalid input");
+        }
+        func();
+        return;
+      case command === "hash":
+        await calculateHash(currentPath, args[0]);
+        return;
       case command === "ls":
         await CommandHandler.ls(currentPath);
         break;
@@ -51,6 +94,12 @@ async function parseLine(line) {
       case command === "rm":
         await CommandHandler.rm(currentPath, args[0]);
         break;
+      case command === "compress":
+        await compress(currentPath, args[0], args[1]);
+        return;
+      case command === "decompress":
+        await decompress(currentPath, args[0], args[1]);
+        return;
       default:
         throw new Error("Invalid input");
     }
@@ -60,12 +109,8 @@ async function parseLine(line) {
 }
 
 const init = async () => {
-  const rl = await readline.createInterface({ input, output });
+  const rl = readline.createInterface({ input, output });
   console.log(`Welcome to the File Manager, ${username}!`);
-  //const answer = await rl.question("What do you think of Node.js? ");
-
-  //console.log(`Thank you for your valuable feedback: ${answer}`);
-
   console.log(`You are currently in ${currentPath}`);
 
   rl.on("line", async (data) => {
@@ -74,9 +119,9 @@ const init = async () => {
       return;
     }
     const readData = await parseLine(data);
-    // console.log(readData);
-    if (readData) {
-      console.log(readData);
+
+    if (readData === true) {
+      console.log("Success!");
     }
     /*    
       await readData?.pipe(output);

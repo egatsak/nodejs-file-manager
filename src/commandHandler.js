@@ -1,7 +1,10 @@
 import * as fs from "fs/promises";
 import { createReadStream, createWriteStream } from "fs";
-import { join, sep, parse } from "path";
-import streamToString from "./stream/streamToString.js";
+import { fileURLToPath } from "url";
+import { join, sep, parse, dirname } from "path";
+/* import { dirname, resolve } from "path"; */
+
+import streamToString from "./helpers/streamToString.js";
 
 export default class CommandHandler {
   static async ls(currentPath) {
@@ -68,7 +71,7 @@ export default class CommandHandler {
       console.log(await streamToString(stream));
     } catch (e) {
       if (e.message.includes("ENOENT")) {
-        console.log("Operation failed");
+        console.log("Operation failed ; ", e.message);
       } else {
         console.log(e.message);
       }
@@ -163,7 +166,7 @@ export default class CommandHandler {
 
       return true;
     } catch (e) {
-      if (e.message.includes("ENOENT")) {
+      if (e.message.includes("ENOENT") || e.code === "ENOTDIR") {
         console.log("Operation failed ;", e.message);
       } else {
         console.log(e.message);
@@ -184,7 +187,11 @@ export default class CommandHandler {
         console.log("File successfully moved");
       }
     } catch (e) {
-      console.log(e);
+      if (e.message.includes("ENOENT") || e.code === "ENOTDIR") {
+        console.log("Operation failed ;", e.message);
+      } else {
+        console.log(e.message);
+      }
     }
   }
 
@@ -200,9 +207,12 @@ export default class CommandHandler {
         path = join(currentPath, pathArg);
       }
       await fs.rm(path);
-      /*       console.log("File successfully deleted"); */
     } catch (e) {
-      console.log(e);
+      if (e.message.includes("ENOENT") || e.code === "ENOTDIR") {
+        console.log("Operation failed ;", e.message);
+      } else {
+        console.log(e.message);
+      }
     }
   }
 }
