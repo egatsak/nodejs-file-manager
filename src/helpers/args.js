@@ -13,5 +13,3 @@ export const parseArgs = () => {
 
   return argsMap;
 };
-
-//reduce!
