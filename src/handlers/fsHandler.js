@@ -1,10 +1,10 @@
 import * as fs from "node:fs/promises";
-import { createReadStream, createWriteStream } from "node:fs";
-import { join, parse } from "node:path";
+import {createReadStream, createWriteStream} from "node:fs";
+import {join, parse} from "node:path";
 
 import streamToString from "../helpers/streamToString.js";
-import { pathResolver } from "../helpers/pathResolver.js";
-import { errorHandler } from "../helpers/errorHandler.js";
+import {pathResolver} from "../helpers/pathResolver.js";
+import {errorHandler} from "../helpers/errorHandler.js";
 
 export default class FsHandler {
   static async ls(currentPath) {
@@ -13,19 +13,14 @@ export default class FsHandler {
         withFileTypes: true
       });
 
-      const output = data.map((item) => {
-        const type =
-          item[Object.getOwnPropertySymbols(item)[0]] === 2
-            ? "directory"
-            : "file";
+      const output = data.map(item => {
+        const type = item[Object.getOwnPropertySymbols(item)[0]] === 2 ? "directory" : "file";
         return {
           name: item.name,
           type
         };
       });
-      console.table(
-        output.sort((a, b) => a.type.localeCompare(b.type))
-      );
+      console.table(output.sort((a, b) => a.type.localeCompare(b.type)));
     } catch (e) {
       errorHandler(e, "ENOENT");
     }
@@ -68,7 +63,7 @@ export default class FsHandler {
   static async rn(currentPath, sourceFilePath, targetFileName) {
     try {
       const prevFilePath = pathResolver(currentPath, sourceFilePath);
-      const { dir } = parse(prevFilePath);
+      const {dir} = parse(prevFilePath);
       const newFilePath = pathResolver(dir, targetFileName);
       const targetDirListing = await fs.readdir(dir);
 
@@ -90,7 +85,7 @@ export default class FsHandler {
 
       await fs.access(prevFilePath);
 
-      const { base: sourceBase } = parse(prevFilePath);
+      const {base: sourceBase} = parse(prevFilePath);
 
       const targetDirListing = await fs.readdir(newDirPath);
       if (targetDirListing.includes(sourceBase)) {
@@ -98,9 +93,7 @@ export default class FsHandler {
       }
 
       const inputStream = createReadStream(prevFilePath);
-      const outputStream = createWriteStream(
-        join(newDirPath, sourceBase)
-      );
+      const outputStream = createWriteStream(join(newDirPath, sourceBase));
 
       inputStream.pipe(outputStream);
 
@@ -112,11 +105,7 @@ export default class FsHandler {
 
   static async mv(currentPath, sourceFilePath, targetDirPath) {
     try {
-      const isCopied = await this.cp(
-        currentPath,
-        sourceFilePath,
-        targetDirPath
-      );
+      const isCopied = await this.cp(currentPath, sourceFilePath, targetDirPath);
 
       if (isCopied) {
         await this.rm(currentPath, sourceFilePath);

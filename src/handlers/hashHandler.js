@@ -1,17 +1,18 @@
 import * as crypto from "node:crypto";
-import * as fs from "node:fs/promises";
+import {createReadStream} from "node:fs";
 
-import { pathResolver } from "../helpers/pathResolver.js";
-import { errorHandler } from "../helpers/errorHandler.js";
+import {pathResolver} from "../helpers/pathResolver.js";
+import {errorHandler} from "../helpers/errorHandler.js";
 
 export const calculateHash = async (currentPath, pathArg) => {
   try {
     const path = pathResolver(currentPath, pathArg);
-    const data = await fs.readFile(path);
-    const hashSum = crypto.createHash("sha256");
-    hashSum.update(data);
-    const hex = hashSum.digest("hex");
-    console.log(hex);
+    const dataStream = createReadStream(path);
+    const hash = crypto.createHash("sha256");
+
+    dataStream.pipe(hash).on("finish", () => {
+      console.log(hash.digest("hex"));
+    });
   } catch (e) {
     errorHandler(e, "ENOENT");
   }

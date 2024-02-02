@@ -5,7 +5,16 @@ export const osMethods = {
     console.log(os.EOL);
   },
   cpus: () => {
-    console.log(os.cpus());
+    console.table(
+      os.cpus().map(cpu => {
+        return {
+          "CPU model": cpu.model,
+          "Speed, GHz": process.platform === "win32" ? cpu.speed / 1000 : cpu.speed // translate MHz to GHz
+        };
+      })
+    );
+    console.log(`${os.cpus().length} logical cores totally`);
+    console.log(`Available parallelism for applications is ${os.availableParallelism()}`);
   },
   homedir: () => {
     console.log(os.userInfo().homedir);
