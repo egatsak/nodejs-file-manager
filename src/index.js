@@ -1,12 +1,50 @@
-import * as readline from "readline/promises";
-import os from "os";
-import { stdin as input, stdout as output } from "process";
-import CommandHandler from "./commandHandler.js";
-import { parseArgs } from "./cli/args.js";
+import * as readline from "node:readline/promises";
+import os from "node:os";
+import {fileURLToPath} from "node:url";
+import {dirname, join} from "node:path";
+import {stdin as input, stdout as output} from "node:process";
+
+import FsHandler from "./handlers/fsHandler.js";
+import {parseArgs} from "./helpers/args.js";
+import {osMethods} from "./handlers/osHandler.js";
+import {calculateHash} from "./handlers/hashHandler.js";
+import {compress, decompress} from "./handlers/zipHandler.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const args = parseArgs();
-const username = args["username"];
+
+const username = args["username"] ?? os.userInfo().username;
 let currentPath = os.homedir();
+
+const init = async () => {
+  const rl = readline.createInterface({input, output});
+
+  console.log(`Welcome to the File Manager, ${username}!`);
+  console.log(`You are currently in ${currentPath}`);
+
+  rl.on("line", async data => {
+    if (data.trim() === ".exit") {
+      rl.close();
+      return;
+    }
+
+    const readData = await parseLine(data);
+
+    if (readData === true) {
+      console.log("Success!");
+    }
+
+    console.log(`You are currently in ${currentPath}`);
+  });
+
+  rl.on("close", () => {
+    console.log(`Thank you for using File Manager, ${username}, goodbye!`);
+  });
+};
+
+await init();
 
 async function parseLine(line) {
   const parsedLine = line.split(" ");
@@ -14,43 +52,79 @@ async function parseLine(line) {
 
   try {
     switch (true) {
+      case command === "help":
+        await FsHandler.cat(__dirname, join("..", "HELP.txt"));
+        return;
+
+      case command === "os":
+        if (args.length !== 1 || !args[0].startsWith("--")) {
+          throw new Error("Invalid input");
+        }
+
+        const arg = args[0].slice(2);
+        const func = osMethods[arg];
+
+        if (!func) {
+          throw new Error("Invalid input");
+        }
+
+        func();
+        return;
+
+      case command === "hash":
+        await calculateHash(currentPath, args[0]);
+        return;
+
       case command === "ls":
-        await CommandHandler.ls(currentPath);
-        break;
+        await FsHandler.ls(currentPath);
+        return;
+
       case command === "up":
-        const upperPath = await CommandHandler.cd(currentPath, "..");
+        const upperPath = await FsHandler.cd(currentPath, "..");
         if (upperPath) {
           currentPath = upperPath;
         }
-        break;
+        return;
+
       case command === "cd":
-        const newPath = await CommandHandler.cd(currentPath, args[0]);
+        const newPath = await FsHandler.cd(currentPath, args[0]);
         if (newPath) {
           currentPath = newPath;
         }
-        break;
+        return;
+
       case command === "cat":
-        const data = await CommandHandler.cat(currentPath, args[0]);
+        const data = await FsHandler.cat(currentPath, args[0]);
         return data;
+
       case command === "add":
-        await CommandHandler.add(currentPath, args[0]);
-        break;
+        await FsHandler.add(currentPath, args[0]);
+        return;
+
       case command === "rn":
-        await CommandHandler.rn(currentPath, args[0], args[1]);
-        break;
+        await FsHandler.rn(currentPath, args[0], args[1]);
+        return;
+
       case command === "cp":
-        const cpData = await CommandHandler.cp(
-          currentPath,
-          args[0],
-          args[1]
-        );
+        const cpData = await FsHandler.cp(currentPath, args[0], args[1]);
         return cpData;
+
       case command === "mv":
-        await CommandHandler.mv(currentPath, args[0], args[1]);
-        break;
+        await FsHandler.mv(currentPath, args[0], args[1]);
+        return;
+
       case command === "rm":
-        await CommandHandler.rm(currentPath, args[0]);
-        break;
+        await FsHandler.rm(currentPath, args[0]);
+        return;
+
+      case command === "compress":
+        await compress(currentPath, args[0], args[1]);
+        return;
+
+      case command === "decompress":
+        await decompress(currentPath, args[0], args[1]);
+        return;
+
       default:
         throw new Error("Invalid input");
     }
@@ -58,37 +132,3 @@ async function parseLine(line) {
     console.log(e.message);
   }
 }
-
-const init = async () => {
-  const rl = await readline.createInterface({ input, output });
-  console.log(`Welcome to the File Manager, ${username}!`);
-  //const answer = await rl.question("What do you think of Node.js? ");
-
-  //console.log(`Thank you for your valuable feedback: ${answer}`);
-
-  console.log(`You are currently in ${currentPath}`);
-
-  rl.on("line", async (data) => {
-    if (data.trim() === ".exit") {
-      rl.close();
-      return;
-    }
-    const readData = await parseLine(data);
-    // console.log(readData);
-    if (readData) {
-      console.log(readData);
-    }
-    /*    
-      await readData?.pipe(output);
-    */
-    console.log(`You are currently in ${currentPath}`);
-  });
-
-  rl.on("close", () => {
-    console.log(
-      `Thank you for using File Manager, ${username}, goodbye!`
-    );
-  });
-};
-
-await init();
